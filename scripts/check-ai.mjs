@@ -47,9 +47,13 @@ try {
       // Omit provider/model to use the app's portal configuration.
     });
     // Official examples document these text fields; never dump raw metadata.
+    const redact = value => [secret, appId, client.authToken].filter(item => typeof item === 'string' && item.length).reduce((text, item) => text.split(item).join('[redacted]'), String(value));
+    const serviceError = response?.data?.type === 'error';
     const answer = response?.data?.content ?? response?.content;
-    if (typeof answer !== 'string' || !answer.trim()) {
-      console.error('AI returned no text in data.content or content.');
+    if (serviceError || typeof answer !== 'string' || !answer.trim()) {
+      console.error(serviceError ? 'DNotifier reported an error.' : 'AI returned no text in data.content or content.');
+      if (typeof response?.data?.type === 'string') console.error('Response type:', redact(response.data.type));
+      if (typeof response?.data?.message === 'string') console.error('Service message:', redact(response.data.message));
       console.error('Top-level response fields:', response && typeof response === 'object' ? Object.keys(response).join(', ') : typeof response);
       console.error('Data structure:', JSON.stringify(shape(response?.data)));
       if (typeof response?.data === 'string') {
