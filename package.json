@@ -8,7 +8,9 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "check:dnotifier": "node --env-file=.env.local scripts/check-dnotifier.mjs",
-    "test:connection": "node --test tests/check-dnotifier.test.mjs"
+    "test:connection": "node --test tests/check-dnotifier.test.mjs",
+    "check:rag": "node --env-file=.env.local scripts/check-rag.mjs",
+    "test:rag": "node --test tests/check-rag.test.mjs"
   },
   "dependencies": {
     "@dnotifier-realtime/dnotifier": "^1.1.25",
