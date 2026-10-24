@@ -16,6 +16,7 @@ function run(mode) {
       calls++;
       if(calls!==1 || options.senderId!=='nexa-ai-check' || !options.sessionId || !options.saveHistory || !options.message.text) throw new Error('Invalid call');
       if(${JSON.stringify(mode)}==='failure')throw new Error('test-secret');
+      if(${JSON.stringify(mode)}==='envelope-error')return {data:{type:'error',message:'Provider is not configured. test-secret',content:'This must not count as success'}};
       if(${JSON.stringify(mode)}==='empty')return {metadata:{token:'never-print-token'}};
       return ${mode === 'top' ? "{content:'Nexa AI is connected.'}" : "{data:{content:'Nexa AI is connected.'}}"};
     };
@@ -32,3 +33,5 @@ for(const mode of ['nested','top'])test(`reads documented ${mode} text response`
 test('disabled AI prevents sending a prompt',()=>{const r=run('disabled');assert.equal(r.code,1);assert.match(r.output,/not enabled/);});
 test('unexpected response fields fail without raw metadata',()=>{const r=run('empty');assert.equal(r.code,1);assert.match(r.output,/no text/);});
 test('provider errors are reported without leaking raw errors',()=>{const r=run('failure');assert.equal(r.code,1);assert.match(r.output,/AI request failed/);});
+
+test('error envelopes stay failures and report redacted service messages',()=>{const r=run('envelope-error');assert.equal(r.code,1);assert.match(r.output,/Response type: error/);assert.match(r.output,/Service message: Provider is not configured/);assert.ok(!r.output.includes('AI response received'));});
