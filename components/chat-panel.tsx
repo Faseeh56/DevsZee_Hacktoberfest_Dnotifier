@@ -177,12 +177,12 @@ export function ChatPanel() {
                   {message.role === "assistant" &&
                     message.intent === "needs_human" && (
                       <span className="badge badge-purple">
-                        Passed to the team
+                        Team assistance needed
                       </span>
                     )}
                   {message.role === "assistant" &&
                     message.intent === "hot_lead" && (
-                      <span className="badge badge-teal">Request received</span>
+                      <span className="badge badge-teal">Interest noted</span>
                     )}
                   {failed?.id === message.id && (
                     <span className="text-xs text-[var(--danger)]">

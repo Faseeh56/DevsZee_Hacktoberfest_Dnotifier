@@ -17,3 +17,6 @@ export function ownApi(path: string): string {
   }
   return url.pathname + url.search;
 }
+
+// Enable only the chat API while the owner/database integration is unfinished.
+export const CHAT_USE_MOCK = process.env.NEXT_PUBLIC_CHAT_USE_MOCK !== "false";

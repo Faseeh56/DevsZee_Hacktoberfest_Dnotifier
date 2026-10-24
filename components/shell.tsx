@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { CHAT_USE_MOCK } from "@/lib/config";
 import { brand } from "@/lib/brand";
 import { Icon } from "./icons";
 export function Shell({
@@ -87,14 +88,14 @@ export function Shell({
               <Icon name="chat" />
               Customer chat
             </Link>
-            <Link
+{CHAT_USE_MOCK && (            <Link
               className={`nav-link ${active === "dashboard" ? "nav-active" : ""}`}
               aria-current={active === "dashboard" ? "page" : undefined}
               href="/dashboard"
             >
               <Icon name="grid" />
               Owner dashboard
-            </Link>
+            </Link>)}
           </nav>
         </div>
       </header>
