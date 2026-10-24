@@ -1,120 +1,124 @@
 # Nexa — Support & Lead Intelligence
 
-Nexa connects a customer conversation to an owner's follow-up workspace. This is the frontend module: Next.js App Router, TypeScript, Tailwind 4. Provider calls stay in your team's backend.
+**[Open the live app](https://devs-zee-hacktoberfest-dnotifier.vercel.app/)**
 
-## Run
+Nexa helps customers find answers in a business's own documents. Built for the **Best Use of DNotifier** hackathon category, the current implementation searches a fictional hotel's FAQ through DNotifier and returns attributed source text. Unsupported questions receive a human-assistance message.
+
+## What works
+
+- Mobile-friendly customer chat with light/dark themes, a browser-held session ID, typing indicator, and retry/error states.
+- Server-side DNotifier authentication and semantic search.
+- PDF extraction and ingestion of 24 FAQs for **Aster House Lahore**, an explicitly fictional hotel.
+- Answers quoted from retrieved FAQ records, with their source FAQ identifiers.
+- Deterministic topic checks and an evidence filter before displaying an answer.
+- A separate local mock mode for developing the owner dashboard, lead statuses, and cross-tab alerts.
+
+**Current scope:** answers are retrieved excerpts, not LLM-generated responses. AI agent routing, lead extraction, Supabase persistence, real owner notifications, and owner authentication are unfinished. A human-assistance message does not save a lead or notify an owner. The owner workspace is hidden in retrieval mode.
+
+## Try it
+
+Visit **https://devs-zee-hacktoberfest-dnotifier.vercel.app/** and ask:
+
+| Question | Expected behavior |
+| --- | --- |
+| How much does a Standard Queen room cost per night? | FAQ-02: PKR 8,000 per room per night |
+| What is the free cancellation deadline? | The documented 48-hour cancellation rule |
+| What is the hotel's annual revenue? | Human-assistance message; no invented answer |
+
+All hotel prices, policies, and contact details are fictional hackathon content. The app cannot confirm reservations or process payments.
+
+## How DNotifier is used
+
+1. The hotel PDF is extracted into individual FAQ records and uploaded to DNotifier's knowledge base.
+2. The browser sends a question to our Next.js `POST /api/chat` route.
+3. The server searches the indexed `aster-house-lahore-v1` source using the DNotifier JavaScript SDK.
+4. Matching evidence passes a deterministic topic/FAQ gate and a provisional similarity filter.
+5. The chat displays the attributed FAQ excerpt, or asks the customer to contact the business team.
+
+DNotifier credentials stay on the server. The browser calls our API route directly.
+
+The similarity floor is **not an accuracy score**. Retrieval has been smoke-tested with pricing, cancellation, and unsupported questions; precision and recall have not been measured on a representative evaluation set. The current topic rules can reject valid paraphrases.
+
+## Stack
+
+Next.js App Router · TypeScript · Tailwind CSS · `@dnotifier-realtime/dnotifier` · Vercel
+
+Supabase is planned for lead storage and is not required for the current retrieval implementation.
+
+## Run locally
+
+Use Node.js 22.3+ in the Node 22 line, or Node 24, to support the PDF extraction dependency.
 
 ```bash
 npm ci
 cp -n .env.example .env.local
-npm run dev
 ```
 
-Open `/` for chat and `/dashboard` for the owner. Mock mode is on by default and requires no credentials. This flag remains a development mechanism, with no demo controls or labels in the product interface. Removing that interface copy does NOT connect DNotifier, Supabase, or an AI model.
-
-## What's polished
-
-- Nexa identity and business-neutral language, with a violet light/dark palette.
-- Mobile chat appears sooner, without the desktop-only introductory cards.
-- No sample leads, fake counts, demo banners, test buttons, or `/error` trigger.
-- No invented fees, schedules, course claims, or business knowledge in mock replies.
-- Customer-facing messages show “Request received” or “Passed to the team”; internal intent labels remain in the owner workspace.
-- Full request details can be expanded in the leads table.
-- User-selected theme remains selected when the system theme changes.
-- Existing browser session ID and user-created local leads are preserved.
-
-## Files to understand
-
-| File | Responsibility |
-| --- | --- |
-| `lib/brand.ts` | Product name, assistant name, tagline, welcome message |
-| `components/shell.tsx` | Navigation, product identity, light/dark theme |
-| `components/chat-panel.tsx` | Session, composer, messages, typing and retry |
-| `components/dashboard.tsx` | Leads, filters, statistics, alerts and statuses |
-| `lib/api.ts` | Adapter from UI to mock functions or API routes |
-| `lib/mock.ts` | Local development responses, storage and tab sync |
-| `lib/types.ts` | Shared request/response types and validation |
-| `lib/format.ts` | Business dates in Asia/Karachi |
-| `app/globals.css` | Tailwind and theme styling |
-
-`brand.ts` centralizes product text. The dashboard breadcrumb and page metadata also contain the product name.
-
-## Apply to the previous project safely
-
-This package includes `apply_update.py` next to the `support-triage-frontend` directory. Stop your dev server with Ctrl+C first. Run from the extracted package directory:
-
-```bash
-python3 apply_update.py "$HOME/Development/projects/hackathons/Best-use-of-Dnotifier/support-triage-frontend"
-```
-
-The updater validates the target, backs up every existing file it will change to a timestamped sibling folder, and updates only its declared frontend files. It doesn't copy `.env.local`, package files, API routes, or node_modules. A failed copy rolls back files it already changed. The script prints an exact restore command; keep the backup until you're satisfied. A restore refuses to overwrite files edited since applying the update.
-
-Then, from your existing project:
-
-```bash
-npm run typecheck
-npm run dev
-```
-
-There are no new dependencies. For a fresh installation, use the complete project directory and `npm ci`.
-
-## Existing browser data
-
-The local adapter retains the storage key `triage.mock.v1` and session key `triage.customer-session.v1`. On first access, it removes only the four original bundled records identified by `demo-session-1` through `demo-session-4`, plus matching seeded alerts. It preserves requests entered through chat, their status values and IDs. Before changing an old seeded store, it saves a full original copy at `triage.backup.before-nexa`. It does not modify Supabase or other server data.
-
-No prefilled leads are inserted for new browsers. The local store is browser/profile/origin-specific, not a multi-user database. Use fictional contacts until backend authentication is ready. Simultaneous writes from multiple customer tabs are not transaction-safe; use one customer tab for development.
-
-## Try the complete flow
-
-1. Open chat and dashboard in two tabs on the same origin/browser.
-2. Ask `How can you help me?` for a local FAQ response.
-3. Send `My name is Faseeh. I want to book a consultation today. WhatsApp +92 300 1234567`.
-4. The owner sees a hot lead and alert. Set it to Contacted, then reload to verify persistence.
-5. Ask `What are your fees?`. Without real documents, this is handed off instead of producing a fabricated price.
-6. Search, filter by status and expand View message.
-7. Try light/dark themes and a narrow mobile viewport.
-
-Mock routing uses text rules; it is not a model or RAG implementation. Responses/alerts remain local until the backend is integrated. Chat transcript is not persisted, while the session ID is. Typing indicates a pending request, not evidence of AI execution. Session storage failure shows a warning and uses a temporary session ID. Loading/empty/error/retry states remain available for actual failures.
-
-## Backend handoff — shared contract unchanged
-
-Set `NEXT_PUBLIC_USE_MOCK=false` in `.env.local`, then restart/rebuild. On Vercel, update the flag and redeploy. With the flag off the adapter calls:
-
-```text
-POST /api/chat
-Body: { sessionId: string, message: string }
-Response: { reply: string, intent: "faq"|"hot_lead"|"needs_human", lead?: { name, contact, need, urgency } }
-
-GET /api/leads
-Response: Lead[] (plain array)
-```
-
-Each Lead has `id, created_at, session_id, name, contact, need, urgency, intent, status, raw_message`. IDs are strings, timestamps are ISO strings, missing extraction fields are null, status is `new|contacted|closed`. Requests time out after 30 seconds, validate response shapes and show safe errors. Explicit retries can repeat backend work because the contract has no idempotency key.
-
-The existing contract has no status mutation route or browser-facing alert transport. Optional integrations remain exactly as before:
+For live retrieval, set these values in `.env.local`:
 
 ```env
-# Enable only after the backend implements these proposed routes:
-NEXT_PUBLIC_LEAD_STATUS_URL=/api/leads/{id}
-NEXT_PUBLIC_ALERTS_URL=/api/alerts
+DNOTIFIER_APP_ID=your_app_id
+DNOTIFIER_SECRET=your_app_secret
+NEXT_PUBLIC_CHAT_USE_MOCK=false
+NEXT_PUBLIC_USE_MOCK=true
 ```
 
-The first sends PATCH with `{ status }` and expects successful JSON or HTTP 204. Without it, API-mode status buttons are disabled. The second expects a same-origin authenticated SSE route sending `data: <alert JSON>` frames separated by two newlines. Both default message events and named `alert` events are accepted. The alert payload remains `{ type: "alert", intent, message, lead?, createdAt }`.
-
-API mode polls `/api/leads` every 8 seconds as a fallback, generating alerts only for new IDs after its first snapshot. This is labelled “Updates every 8s”, not live delivery. An SSE connection, when configured, is labelled Live alerts. EventSource reconnects automatically, and polling continues after interruption. The feed is ephemeral (latest 50 alerts), not durable alert history.
-
-DNotifier secrets and Supabase credentials belong in server-only environment variables. This frontend never imports their SDKs or reads credentials. Backend authorization must protect owner reads, writes and SSE; the public dashboard UI does not implement authentication. Confirm SSE runtime/connection behavior with your backend teammate before deployment.
-
-## Checks
+If ingestion used a custom `DNOTIFIER_KB_USER_ID`, use that same value here. Otherwise the default is `nexa-knowledge`. The matching hotel source must already be indexed in your DNotifier app; see the ingestion guide below.
 
 ```bash
+npm run dev
+```
+
+Open [localhost:3000](http://localhost:3000).
+
+For frontend-only development without credentials, set **both** `NEXT_PUBLIC_CHAT_USE_MOCK=true` and `NEXT_PUBLIC_USE_MOCK=true`, then restart. This enables local mock chat and the owner dashboard at `/dashboard`. Mock leads and alerts are browser-local and do not represent backend integration.
+
+Never commit `.env.local` or prefix DNotifier credentials with `NEXT_PUBLIC_`.
+
+## Deploy on Vercel
+
+Import this GitHub repository as a Next.js project. Use the directory containing `package.json` as the project root.
+
+Add the four environment variables above to the **Production** environment, then deploy the latest `main` commit. Public flags are compiled into the frontend, so changing them requires a new build. The knowledge base remains in DNotifier; deployment does not require uploading the PDF again.
+
+## Validation
+
+```bash
+npm run test:connection
+npm run test:rag
+node --test tests/hotel-faq.test.mjs tests/retrieval-policy.test.mjs
 npm run typecheck
 npm run build
 ```
 
-Production build and TypeScript checks passed. Browser regression checks cover removal of seeded records with backups, preservation of user records, absence of visible demo/old branding, FAQ flow, cross-tab alerts, status persistence, unknown-price handoff, storage-error recovery/retry, session continuity, mobile layout and theme preference. Real backend integrations require your teammates' API implementation.
+Optional live authentication check:
 
+```bash
+npm run check:dnotifier
+```
 
-## Server connection checkpoint
+`npm run check:rag` creates, searches, and removes a temporary verification document. It changes the knowledge base and is separate from the offline tests above.
 
-See [DNotifier connection setup](docs/dnotifier-connection.md) for the first backend step. After adding your App ID and App Secret to `.env.local`, run `npm run check:dnotifier`. This checks authentication; the frontend remains in mock mode until the API routes are ready.
+## Project map
+
+| Path | Responsibility |
+| --- | --- |
+| `app/api/chat/route.ts` | Validate chat requests and return evidence or handoff |
+| `lib/server/dnotifier.ts` | Server-only DNotifier connection |
+| `lib/server/knowledge-base.ts` | Knowledge-base SDK calls |
+| `lib/server/retrieval-policy.mjs` | Topic and evidence checks |
+| `components/chat-panel.tsx` | Chat UI, session, loading, and retries |
+| `components/dashboard.tsx` | Owner workspace for local mock development |
+| `lib/api.ts` | UI adapter for API and mock modes |
+| `scripts/extract-hotel-faq.mjs` | Extract and validate the PDF FAQs |
+| `scripts/upload-hotel-faq.mjs` | Upload FAQ records |
+| `data/knowledge/` | Fictional business source PDF |
+
+## Further documentation
+
+- [Live retrieval chat and limitations](docs/live-retrieval-chat.md)
+- [Business knowledge ingestion](docs/business-knowledge-ingestion.md)
+- [DNotifier connection setup](docs/dnotifier-connection.md)
+- [Knowledge retrieval verification](docs/rag-retrieval.md)
+
+This is a public hackathon prototype. Authentication, durable handoffs, shared lead storage, production abuse controls, and broader retrieval evaluation are needed before real customer use.
