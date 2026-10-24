@@ -1,6 +1,6 @@
 # Nexa — Support & Lead Intelligence
 
-**[Open the live app](https://devs-zee-hacktoberfest-dnotifier.vercel.app/)**
+**[Open the live app](https://devszeehccktoberfestdnotifier.vercel.app/)**
 
 Nexa helps customers find answers in a business's own documents. Built for the **Best Use of DNotifier** hackathon category, the current implementation searches a fictional hotel's FAQ through DNotifier and returns attributed source text. Unsupported questions receive a human-assistance message.
 
@@ -17,7 +17,7 @@ Nexa helps customers find answers in a business's own documents. Built for the *
 
 ## Try it
 
-Visit **https://devs-zee-hacktoberfest-dnotifier.vercel.app/** and ask:
+Visit **https://devszeehccktoberfestdnotifier.vercel.app/** and ask:
 
 | Question | Expected behavior |
 | --- | --- |
