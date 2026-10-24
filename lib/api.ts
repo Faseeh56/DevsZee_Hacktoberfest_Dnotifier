@@ -1,5 +1,5 @@
 "use client";
-import { MOCK_MODE, STATUS_URL, ownApi } from "./config";
+import { MOCK_MODE, CHAT_USE_MOCK, STATUS_URL, ownApi } from "./config";
 import { mockChat, mockLeads, mockStatus } from "./mock";
 import {
   isDetails,
@@ -47,7 +47,7 @@ export async function sendChat(
   sessionId: string,
   message: string,
 ): Promise<ChatResponse> {
-  if (MOCK_MODE) return mockChat(sessionId, message);
+  if (CHAT_USE_MOCK) return mockChat(sessionId, message);
   const result = await request("/api/chat", {
     method: "POST",
     body: JSON.stringify({ sessionId, message }),
