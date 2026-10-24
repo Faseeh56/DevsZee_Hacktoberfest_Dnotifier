@@ -2,6 +2,16 @@
 import { randomUUID } from 'node:crypto';
 import { DNotifier } from '@dnotifier-realtime/dnotifier';
 
+
+// Describe structure only: no string values, tokens or raw response metadata.
+function shape(value, depth = 0) {
+  if (value === null) return 'null';
+  if (typeof value === 'string') return { type: 'string', length: value.length };
+  if (Array.isArray(value)) return { type: 'array', length: value.length, first: depth < 4 ? shape(value[0], depth + 1) : '…' };
+  if (typeof value === 'object') return depth < 4 ? Object.fromEntries(Object.entries(value).slice(0, 20).map(([key, item]) => [key, shape(item, depth + 1)])) : 'object';
+  return typeof value;
+}
+
 const appId = process.env.DNOTIFIER_APP_ID?.trim();
 const secret = process.env.DNOTIFIER_SECRET?.trim();
 if (!appId || !secret) {
@@ -41,6 +51,10 @@ try {
     if (typeof answer !== 'string' || !answer.trim()) {
       console.error('AI returned no text in data.content or content.');
       console.error('Top-level response fields:', response && typeof response === 'object' ? Object.keys(response).join(', ') : typeof response);
+      console.error('Data structure:', JSON.stringify(shape(response?.data)));
+      if (typeof response?.data === 'string') {
+        try { console.error('Decoded data structure:', JSON.stringify(shape(JSON.parse(response.data)))); } catch { /* Plain text isn't JSON. */ }
+      }
       process.exitCode = 1;
     } else {
       // The prompt contains no business/customer data. Still redact known secrets.
