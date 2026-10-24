@@ -8,7 +8,9 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "check:dnotifier": "node --env-file=.env.local scripts/check-dnotifier.mjs",
-    "test:connection": "node --test tests/check-dnotifier.test.mjs"
+    "test:connection": "node --test tests/check-dnotifier.test.mjs",
+    "check:ai": "node --env-file=.env.local scripts/check-ai.mjs",
+    "test:ai": "node --test tests/check-ai.test.mjs"
   },
   "dependencies": {
     "@dnotifier-realtime/dnotifier": "^1.1.25",
