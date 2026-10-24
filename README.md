@@ -113,3 +113,8 @@ npm run build
 ```
 
 Production build and TypeScript checks passed. Browser regression checks cover removal of seeded records with backups, preservation of user records, absence of visible demo/old branding, FAQ flow, cross-tab alerts, status persistence, unknown-price handoff, storage-error recovery/retry, session continuity, mobile layout and theme preference. Real backend integrations require your teammates' API implementation.
+
+
+## Server connection checkpoint
+
+See [DNotifier connection setup](docs/dnotifier-connection.md) for the first backend step. After adding your App ID and App Secret to `.env.local`, run `npm run check:dnotifier`. This checks authentication; the frontend remains in mock mode until the API routes are ready.
