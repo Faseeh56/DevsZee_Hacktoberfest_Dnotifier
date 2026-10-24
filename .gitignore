@@ -3,3 +3,6 @@ node_modules/
 .env*
 !.env.example
 *.tsbuildinfo
+
+# Local extraction previews and ingestion progress
+.knowledge-cache/
