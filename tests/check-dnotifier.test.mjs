@@ -5,11 +5,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import { stripVTControlCharacters } from "node:util";
 
 const script = fileURLToPath(
   new URL("../scripts/check-dnotifier.mjs", import.meta.url),
 );
-function check(mode, withCredentials = true) {
+function check(mode, withCredentials = true, forceColor) {
   const directory = mkdtempSync(join(tmpdir(), "nexa-check-"));
   const environmentFile = join(directory, ".env.local");
   const secret = "test-secret-never-print";
@@ -37,6 +38,11 @@ function check(mode, withCredentials = true) {
   const env = { ...process.env };
   delete env.DNOTIFIER_APP_ID;
   delete env.DNOTIFIER_SECRET;
+  if (forceColor !== undefined) {
+    env.FORCE_COLOR = forceColor;
+    delete env.NO_COLOR;
+    delete env.NODE_DISABLE_COLORS;
+  }
   try {
     const result = spawnSync(
       process.execPath,
@@ -49,13 +55,15 @@ function check(mode, withCredentials = true) {
       { env, encoding: "utf8", timeout: 10000 },
     );
     assert.ifError(result.error);
-    const output = result.stdout + result.stderr;
+    const rawOutput = result.stdout + result.stderr;
+    // Terminal/VS Code settings can color booleans and numbers in child output.
+    const output = stripVTControlCharacters(rawOutput);
     assert.ok(!output.includes(secret), "Secret must not appear in output");
     assert.ok(
       !output.includes("test-token-never-print"),
       "Auth token must not appear in output",
     );
-    return { code: result.status, output };
+    return { code: result.status, output, rawOutput };
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
@@ -88,4 +96,19 @@ test("missing plan data warns without claiming AI access", () => {
   const result = check("no-limits");
   assert.equal(result.code, 0);
   assert.match(result.output, /Plan limits were not returned/);
+});
+
+test("authentication output supports forced terminal colors", () => {
+  const result = check("success", true, "1");
+  assert.equal(result.code, 0);
+  assert.match(result.rawOutput, /\u001b\[/);
+  assert.match(result.output, /AI enabled: true/);
+  assert.match(result.output, /Monthly AI word limit: 100/);
+});
+
+test("authentication output supports disabled terminal colors", () => {
+  const result = check("disabled", true, "0");
+  assert.equal(result.code, 0);
+  assert.doesNotMatch(result.rawOutput, /\u001b\[/);
+  assert.match(result.output, /AI enabled: false/);
 });
